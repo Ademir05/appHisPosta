@@ -1,0 +1,229 @@
+{% extends 'layout.html' %}
+{% from "bootstrap5/form.html" import render_field %}
+
+{% block head %}
+{{ super() }}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+
+    <script>
+        var socket = io();
+        socket.on('update_historia', function(data) {
+            location.reload();
+        });
+    </script>
+    
+{% endblock %}
+
+
+{% block title %}
+    Historias Clínicas
+{% endblock %}
+
+{% block page %}
+    <div class="container p-4">
+        <form class="form-inline" method="post" action="/historias">
+            <div class="row">
+                <div class="col-3">
+                    <select name="search_column" class="form-control mb-2 mr-sm-2">
+                        <option value="dni" {% if search_column == 'dni' %}selected{% endif %}>DNI</option>
+                        <option value="apellidos" {% if search_column == 'apellidos' %}selected{% endif %}>Apellidos</option>
+                        <option value="nombres" {% if search_column == 'nombres' %}selected{% endif %}>Nombres</option>
+                        <option value="direccion" {% if search_column == 'direccion' %}selected{% endif %}>Dirección</option>
+                        <option value="fecha_nacimiento" {% if search_column == 'fecha_nacimiento' %}selected{% endif %}>Fecha de Nacimiento</option>
+                        <option value="sexo" {% if search_column == 'sexo' %}selected{% endif %}>Sexo</option>
+                    </select>
+                </div>
+                <div class="col-8">
+                    <input type="text" name="search_query" class="form-control mb-2 mr-sm-2" placeholder="Buscar..." value="{{ search_query }}">
+                </div>
+                <div class="col-1">
+                    <button type="submit" class="btn btn-primary mb-2">Buscar</button>
+                </div>
+            </div>
+        </form>
+
+        <button type="button" class="btn btn-success mb-2" data-bs-toggle="modal" data-bs-target="#modalNuevo">
+            Nueva Historia Clínica
+        </button>
+
+        <h2>Listado de Historias Clínicas</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nº Historia</th>
+                    <th>Tipo Documento</th>
+                    <th>Documento</th>
+                    <th>Apellidos</th>
+                    <th>Nombres</th>
+                    <th>Dirección</th>
+                    <th>Fecha de Nacimiento</th>
+                    <th>Sexo</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for historia in historias %}
+                    <tr>
+                        <td>{{ historia.id }}</td>
+                        <td>{{ historia.tipo_documento }}</td>
+                        <td>{{ historia.dni }}</td>
+                        <td>{{ historia.apellidos }}</td>
+                        <td>{{ historia.nombres }}</td>
+                        <td>{{ historia.direccion }}</td>
+                        <td>{{ historia.fecha_nacimiento }}</td>
+                        <td>{{ historia.sexo }}</td>
+                        <td>
+                            <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditar" data-id="{{ historia.id }}" data-tipo_documento="{{ historia.tipo_documento }}" data-dni="{{ historia.dni }}" data-apellidos="{{ historia.apellidos }}" data-nombres="{{ historia.nombres }}" data-direccion="{{ historia.direccion }}" data-fecha_nacimiento="{{ historia.fecha_nacimiento }}" data-sexo="{{ historia.sexo }}">Editar</button>
+                            <a href="{{ url_for('liberar_historia', id=historia.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que deseas liberar esta historia clínica?')">Liberar</a>
+                        </td>
+                        
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal para nueva historia -->
+    <div class="modal fade" id="modalNuevo" tabindex="-1" aria-labelledby="nuevaHistoriaModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="nuevaHistoriaModalLabel">Agregar Nueva Historia Clínica</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="/historias" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        <input type="hidden" name="nueva_historia" value="1">
+                        {{ render_field(form.id_new) }}
+                        {{ render_field(form.tipo_documento) }}
+                        {{ render_field(form.dni) }}
+                        {{ render_field(form.apellidos) }}
+                        {{ render_field(form.nombres) }}
+                        {{ render_field(form.direccion) }}
+                        {{ render_field(form.fecha_nacimiento) }}
+                        {{ render_field(form.sexo) }}
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para editar historia -->
+    <div class="modal fade" id="modalEditar" tabindex="-1" aria-labelledby="editarHistoriaModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editarHistoriaModalLabel">Editar Historia Clínica</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="/historias" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        <input type="hidden" name="editar_historia" value="1">
+                        {{ render_field(form.id, id='editar_id', style = "display:none;") }}
+                        {{ render_field(form.id_new, id='editar_id_new') }}
+                        {{ render_field(form.tipo_documento, id='editar_tipo_documento') }}
+                        {{ render_field(form.dni, id='editar_dni') }}
+                        {{ render_field(form.apellidos, id='editar_apellidos') }}
+                        {{ render_field(form.nombres, id='editar_nombres') }}
+                        {{ render_field(form.direccion, id='editar_direccion') }}
+                        {{ render_field(form.fecha_nacimiento, id='editar_fecha_nacimiento') }}
+                        {{ render_field(form.sexo, id='editar_sexo') }}
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var modalEditar = document.getElementById('modalEditar')
+        modalEditar.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget
+            var id = button.getAttribute('data-id')
+            var tipo_documento = button.getAttribute('data-tipo_documento')
+            var dni = button.getAttribute('data-dni')
+            var apellidos = button.getAttribute('data-apellidos')
+            var nombres = button.getAttribute('data-nombres')
+            var direccion = button.getAttribute('data-direccion')
+            var fecha_nacimiento = button.getAttribute('data-fecha_nacimiento')
+            var sexo = button.getAttribute('data-sexo')
+
+            var modalTitle = modalEditar.querySelector('.modal-title')
+            var idInput = modalEditar.querySelector('#editar_id')
+            var idNewInput = modalEditar.querySelector('#editar_id_new')
+            var tipoDocumentoInput = modalEditar.querySelector('#editar_tipo_documento')
+            var dniInput = modalEditar.querySelector('#editar_dni')
+            var apellidosInput = modalEditar.querySelector('#editar_apellidos')
+            var nombresInput = modalEditar.querySelector('#editar_nombres')
+            var direccionInput = modalEditar.querySelector('#editar_direccion')
+            var fechaNacimientoInput = modalEditar.querySelector('#editar_fecha_nacimiento')
+            var sexoInput = modalEditar.querySelector('#editar_sexo')
+
+            modalTitle.textContent = 'Editar Historia Clínica ' + id
+            idInput.value = id
+            idNewInput.value = id
+            tipoDocumentoInput.value = tipo_documento
+            dniInput.value = dni
+            apellidosInput.value = apellidos
+            nombresInput.value = nombres
+            direccionInput.value = direccion
+            fechaNacimientoInput.value = fecha_nacimiento
+            sexoInput.value = sexo
+        })
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+        // Validación del modal de "Nuevo"
+        var formNuevo = document.querySelector("#modalNuevo form");
+        formNuevo.addEventListener("submit", function(event) {
+            if (!validarFormulario(formNuevo)) {
+                event.preventDefault();
+                event.stopPropagation();
+            } else {
+                formNuevo.classList.add('was-validated');
+            }
+        });
+
+        // Validación del modal de "Editar"
+        var formEditar = document.querySelector("#modalEditar form");
+        formEditar.addEventListener("submit", function(event) {
+            if (!validarFormulario(formEditar)) {
+                event.preventDefault();
+                event.stopPropagation();
+            } else {
+                formEditar.classList.add('was-validated');
+            }
+            });
+        });
+
+        function validarFormulario(form) {
+            var valido = true;
+            var tipoDocumento = form.querySelector("select[name='tipo_documento']").value;
+            var numeroDocumento = form.querySelector("input[name='dni']").value;
+
+            if (tipoDocumento === "DNI" && !/^\d{8}$/.test(numeroDocumento)) {
+                valido = false;
+                alert("El DNI debe tener 8 dígitos.");
+            } else if (tipoDocumento === "Carnet de Extranjería" && !/^[a-zA-Z0-9]{1,12}$/.test(numeroDocumento)) {
+                valido = false;
+                alert("El Carnet de Extranjería debe ser alfanumérico y tener hasta 12 caracteres.");
+            } else if (tipoDocumento === "DNI Extranjera" && !/^[a-zA-Z0-9]{1,15}$/.test(numeroDocumento)) {
+                valido = false;
+                alert("El DNI Extranjera debe ser alfanumérico y tener hasta 15 caracteres.");
+            }
+
+            return valido;
+        }
+    </script>
+    
+
+{% endblock %}

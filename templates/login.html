@@ -1,0 +1,26 @@
+{% from "bootstrap5/form.html" import render_field %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% block styles %}
+        {{ bootstrap.load_css() }}
+    {% endblock %}
+    <title>Inicio de sesion</title>
+</head>
+<body class="d-flex align-items-center py-4 bg-body-tertiary">
+    <main class="form-singin w-100 m-auto">
+        <form class="form-singin" method="post" action="/login">
+            
+            <h2 class="form-singin-heading">Por favor, inicia sesion</h2>
+            {{ form.hidden_tag() }}
+            {{ render_field(form.username) }}
+            {{ render_field(form.password) }}
+            {{ render_field(form.remember) }}
+            <button class="btn btn-lg btn-primary btn-block" type="submit">Iniciar sesion</button>
+            
+        </form>
+    </main>
+</body>
+</html>
